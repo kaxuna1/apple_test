@@ -4,6 +4,8 @@ from pprint import pprint
 from flask import Flask
 from flask import request
 from pymongo import MongoClient
+from datetime import date
+import json
 
 app = Flask(__name__)
 client = MongoClient("mongodb://beta.redmed.ge:27017/apple")
@@ -19,22 +21,61 @@ if __name__ == '__main__':
     app.run()
 
 globalData = {}
+conditon = 'Good'
+product = 'iphoneXS'
+jdParams = db.jdParams.find({})
+jdParamsObj = {}
+for jdParam in jdParams:
+    jdParamsObj[int(jdParam['value']).__str__()] = jdParam['name']
+pprint(jdParamsObj)
 
 
 @app.route('/save')
 def save():
     objectToSave = {
+        'name': product,
+        'condition': conditon,
         'params': request.args.get('params'),
-        'price': request.args.get('price')
+        'price': request.args.get('price'),
+        'date': date.today().__str__()
     }
-    db.jdBuy.insertOne(objectToSave)
+    db.jdBuy.insert(objectToSave)
     return 'true'
+
+
+@app.route("/report")
+def report():
+    jdData = db.jdBuy.find({})
+    reportData = []
+    for data in jdData:
+        paramsString = data['params']
+        params = json.loads(paramsString)
+        paramsValue = ''
+        for item in params:
+            paramsValue = paramsValue + jdParamsObj[item.__str__()] + ', '
+        reportData.append({'Pull Date': data['date'],
+                           'Observation Type': 'Trade-In',
+                           'Line of Business': 'Phone',
+                           'Country': 'China',
+                           'Source': 'JD.COM',
+                           'Manufacturer': 'Apple',
+                           'Model Name': data['name'] ,
+                           'Model Description': data['name'] + ' ' + jdParamsObj[params[0].__str__()]+ ' ' + jdParamsObj[params[1].__str__()],
+                           'Capacity': jdParamsObj[params[1].__str__()],
+                           'Color': jdParamsObj[params[3].__str__()],
+                           'condition': data['condition'],
+                           'price': data['price'],
+                           'currency': 'CNY',
+                           'Find My Phone Activated': jdParamsObj[params[6].__str__()],
+                           'Input questions (if available)': paramsValue,
+                           })
+
+    pprint(reportData)
+    return reportData.__str__()
 
 
 @app.route('/start')
 def start():
-    product = 'iphoneXS'
-    conditon = 'Excellent'
     result = getParams(product, conditon)
     for params in result:
         # MacOS
