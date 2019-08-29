@@ -1,10 +1,13 @@
-from flask import Flask
-import sys
-import numpy
-from itertools import product
 import webbrowser
+from pprint import pprint
+
+from flask import Flask
+from flask import request
+from pymongo import MongoClient
 
 app = Flask(__name__)
+client = MongoClient("mongodb://beta.redmed.ge:27017/apple")
+db = client.apple
 
 
 @app.route('/')
@@ -16,6 +19,16 @@ if __name__ == '__main__':
     app.run()
 
 globalData = {}
+
+
+@app.route('/save')
+def save():
+    objectToSave = {
+        'params': request.args.get('params'),
+        'price': request.args.get('price')
+    }
+    db.jdBuy.insertOne(objectToSave)
+    return 'true'
 
 
 @app.route('/start')
