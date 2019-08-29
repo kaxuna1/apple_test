@@ -2,6 +2,7 @@ from flask import Flask
 import sys
 import numpy
 from itertools import product
+import webbrowser
 
 app = Flask(__name__)
 
@@ -14,16 +15,27 @@ def hello_world():
 if __name__ == '__main__':
     app.run()
 
+globalData = {}
+
 
 @app.route('/start')
 def start():
     product = 'iphoneXS'
-    conditon = 'Poor'
+    conditon = 'Excellent'
     result = getParams(product, conditon)
     for params in result:
-        print(params)
+        # MacOS
+        chrome_path = 'open -a /Applications/Google\ Chrome.app %s'
+        globalData[params.__str__()] = {}
+        # Windows
+        # chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
 
-    return result.__str__()
+        # Linux
+        # chrome_path = '/usr/bin/google-chrome %s'
+
+        webbrowser.get(chrome_path).open(productMap[product]['url'] + '&params=' + params.__str__())
+
+    return globalData.__str__()
 
 
 def getParams(product, conditon):
@@ -47,6 +59,7 @@ def getParams(product, conditon):
 
 productMap = {
     'iphoneXS': {
+        'url': 'https://huishou.paipai.com/detail?pid=174921',
         'Excellent': [[7399], [7396, 3987, 2023], [2014], [2452, 2902, 2903], [2072], [2026], [2100], [2125], [2118],
                       [2114], [2067]],
         'Good': [[7399], [7396, 3987, 2023], [2014], [2452, 2902, 2903], [2072], [2026], [2100], [2125, 2126],
